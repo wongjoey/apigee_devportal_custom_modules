@@ -1,0 +1,6 @@
+name = Auth0 App Creation Custom Workflow
+description = Auth0 App Creation Custom Workflow
+core = 7.x
+package = Auth0 Custom Module
+files[] = auth0_app_flow.module
+configure = admin/config/administration/auth0_app_flow
