@@ -5,7 +5,11 @@
  */
 
 /**
+ * Invoke Auth0 application registration API and use generated client id/secret to replace in Apigee Edge.
  *
+ * @param array $r
+ * @param array $form_state
+ * @return boolean
  */
  function auth0_app_flow_devconnect_developer_app_save(array $r, array &$form_state) {
 
@@ -25,8 +29,8 @@
         "token_endpoint_auth_method": "client_secret_post"
     }';
 
-    $server_endpoint = variable_get('auth0_app_flow_server_endpoint', '')
-    $authorization_header = variable_get('auth0_app_flow_authorization_header', '')
+    $server_endpoint = variable_get('auth0_app_flow_server_endpoint');
+    $authorization_header = variable_get('auth0_app_flow_authorization_header');
 
     $options = array(
         'method' => 'POST',
@@ -36,10 +40,9 @@
     );
     $result = drupal_http_request($server_endpoint, $options);
 
-    //watchdog("auth0_app", "'Auth0 Result: ' . $result->data");
+    watchdog("auth0_app", "'Auth0 Result: ' . $result->data");
 
     $result = json_decode($result->data);
-
 
     global $user;
     $app_id = $r['data']['appId'];
