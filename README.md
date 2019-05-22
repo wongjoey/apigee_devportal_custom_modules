@@ -6,4 +6,5 @@ This is an open-source project. It is not covered by Apigee support contracts. H
 
 This repository has the following modules.
 
-* auth0_app_flow - Module for integrating with Auth0 for application registration.
+* auth0_app_flow - Module for integrating with Auth0 for application registration. This example will utilize Auth0 generated client id and secret into Apigee Edge.
+* okta_app_flow - Module for integrating with Auth0 for application registration. This example will utilize Apigee Edge generated client id and secret into Okta.
