@@ -1,0 +1,10 @@
+<?php
+/**
+ * Implements hook_uninstall()
+ *
+ * Remove variables used.
+ */
+function okta_app_flow_uninstall() {
+  variable_del('okta_app_flow_server_endpoint');
+  variable_del('okta_app_flow_authorization_header');
+}

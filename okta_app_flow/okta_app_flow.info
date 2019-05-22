@@ -1,0 +1,6 @@
+name = Okta App Creation Custom Workflow
+description = Okta App Creation Custom Workflow
+core = 7.x
+package = Okta Custom Module
+files[] = okta_app_flow.module
+configure = admin/config/administration/okta_app_flow

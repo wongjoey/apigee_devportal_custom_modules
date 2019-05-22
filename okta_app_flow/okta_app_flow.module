@@ -1,0 +1,118 @@
+<?php
+/**
+ * @file
+ * Module to integrate with Okta to provision application and import keys generated into Apigee Edge.
+ */
+
+/**
+ * Invoke Okta application registration API and use generated client id/secret to replace in Apigee Edge.
+ *
+ * @param array $r
+ * @param array $form_state
+ * @return boolean
+ */
+function okta_app_flow_devconnect_developer_app_save(array $results, array &$form_state) {
+    // Get App Details
+    $app_id = $results['data']['appId'];
+    $entities = entity_load('developer_app', array($app_id));
+    $entity = reset($entities);
+
+    // Extract app data needed
+    $client_id = $entity->credentials[0]['consumerKey'];
+    $client_secret = $entity->credentials[0]['consumerSecret'];
+    $app_name = $entity->name;
+    $app_displayname = $entity->attributes['DisplayName'];
+    $callback_url = $entity->callbackUrl;
+
+    //Get the endpoint details..
+    $server_endpoint = variable_get('okta_app_flow_server_endpoint');
+    $authorization_header = variable_get('okta_app_flow_authorization_header');
+
+
+    // Make the call to okta..
+    $payload = '{
+    "name": "oidc_client",
+    "label": "' . $app_displayname .  '",
+    "signOnMode": "OPENID_CONNECT",
+    "credentials": {
+      "oauthClient": {
+        "client_id":"'. $client_id .'",
+        "client_secret":"' . $client_secret . '",
+        "token_endpoint_auth_method": "client_secret_post"
+      }
+    },
+    "settings": {
+      "oauthClient": {
+        "client_uri": "'. $callback_url .'",
+        "logo_uri": "'. $callback_url .'",
+        "redirect_uris": [
+          "'. $callback_url .'"
+        ],
+        "response_types": [
+          "token",
+          "id_token",
+          "code"
+        ],
+        "grant_types": [
+          "implicit",
+          "authorization_code"
+        ],
+        "application_type": "native"
+      }
+    }
+}';
+    $options = array(
+        'method' => 'POST',
+        'data' => $payload,
+        'timeout' => 15,
+        'headers' => array('Accept' => 'application/json', 'Content-Type' => 'application/json', 'Authorization' => $authorization_header),
+    );
+    $result = drupal_http_request($server_endpoint, $options);
+
+    return TRUE;
+}
+
+/**
+ * Implements hook_menu().
+ */
+function okta_app_flow_menu() {
+  $items['admin/config/administration/okta_app_flow'] = array(
+    'title' => 'Okta External Application Registration',
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('okta_app_flow_configure'),
+    // Use the default/standard site configuration permission.
+    'access arguments' => array('administer site configuration'),
+    'type' => MENU_NORMAL_ITEM,
+  );
+  return $items;
+}
+
+/**
+ * Creates/returns a form to configure the block's variables.
+ *
+ * @param array $form
+ * @param array $form_state
+ * @return array
+ */
+ function okta_app_flow_configure($form, &$form_state) {
+     $form['okta_app_flow_server_endpoint'] = array(
+        '#type' => 'textfield',
+        '#title' => t('Okta Server Endpoint'),
+        '#description' => t('The Okta server endpoint for your organization.'),
+        '#default_value' => variable_get('okta_app_flow_server_endpoint', 'https://instance.oktapreview.com/api/v1/apps'),
+        '#size' => 60,
+        '#maxlength' => 120,
+        '#required' => TRUE,
+     );
+     
+     $form['okta_app_flow_authorization_header'] = array(
+        '#type' => 'textfield',
+        '#title' => t('Okta Authorization Token'),
+        '#description' => t('The Okta SSWS Token for calling Okta APIs.'),
+        '#default_value' => variable_get('okta_app_flow_authorization_header', 'SSWS XYZ'),
+        '#size' => 60,
+        '#maxlength' => 10000,
+        '#required' => TRUE,
+     );
+     return system_settings_form($form);
+ }
